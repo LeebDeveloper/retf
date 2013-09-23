@@ -247,7 +247,7 @@ impl Encoder {
     }
 
     fn encode(&self, term: &ErlangTerm) {
-        
+
     }
 
 
@@ -272,12 +272,12 @@ mod tests {
     fn deserialize_int_test() {
         test_parse([97, 1], |i| {
             match i {
-                @Integer(1) => (),
+                &Integer(1) => (),
                 _ => fail!()
             }});
         test_parse([98, 119, 53, 148, 0], |i| {
             match i {
-                @Integer(2000000000) => (),
+                &Integer(2000000000) => (),
                 _ => fail!()
             }});
     }
@@ -286,12 +286,12 @@ mod tests {
     fn deserialize_atom_test() {
         test_parse([100, 0, 2, 111, 107], |i| {
             match i {
-                @Atom(string) => assert_eq!(string, @"ok"),
+                &Atom(string) => assert_eq!(string, @"ok"),
                 _ => fail!()
             }});
         test_parse([115, 2, 111, 107], |i| {
             match i {
-                @Atom(string) => assert_eq!(string, @"ok"),
+                &Atom(string) => assert_eq!(string, @"ok"),
                 _ => fail!()
             }});
     }
@@ -302,7 +302,7 @@ mod tests {
                     48,48,48,48,48,48,48,48,48,48,101,
                     45,48,49,0,0,0,0,0], |i| {
             match i {
-                @Float(f) => assert_eq!(f, 1.25e-01),
+                &Float(f) => assert_eq!(f, 1.25e-01),
                 _ => fail!()
             }});
     }
@@ -313,7 +313,7 @@ mod tests {
                     110,111,104,111,115,116,0,0,0,33,0,0,0,0,0], 
             |i| {
             match i {
-                @Pid(@Atom(string), 33, 0, 0) => assert_eq!(string, @"nonode@nohost"),
+                &Pid(@Atom(string), 33, 0, 0) => assert_eq!(string, @"nonode@nohost"),
                 _ => fail!()
             }});
     }
@@ -323,13 +323,13 @@ mod tests {
         test_parse([104,3,97,1,97,2,97,3], 
             |i| {
             match i {
-                @Tuple([@Integer(1), @Integer(2), @Integer(3)]) => (),
+                &Tuple([@Integer(1), @Integer(2), @Integer(3)]) => (),
                 _ => fail!()
             }});
         test_parse([105,0,0,0,3,97,1,97,2,97,3], 
             |i| {
             match i {
-                @Tuple([@Integer(1), @Integer(2), @Integer(3)]) => (),
+                &Tuple([@Integer(1), @Integer(2), @Integer(3)]) => (),
                 _ => fail!()
             }});
     }
@@ -338,7 +338,7 @@ mod tests {
     fn deserialize_string_test() {
         test_parse([107, 0, 2, 111, 107], |i| {
             match i {
-                @String(string) => assert_eq!(string, @"ok"),
+                &String(string) => assert_eq!(string, @"ok"),
                 _ => fail!()
             }});
     }
@@ -347,12 +347,12 @@ mod tests {
     fn deserialize_list_test() {
         test_parse([108,0,0,0,2,98,0,0,1,44,98,0,0,1,144,106], |i| {
             match i {
-                @List([@Integer(300), @Integer(400)]) => (),
+                &List([@Integer(300), @Integer(400)]) => (),
                 _ => fail!()
             }});
         test_parse([108,0,0,0,1,98,0,0,1,44,98,0,0,1,144], |i| {
             match i {
-                @List([@Integer(300), @Integer(400)]) => (),
+                &List([@Integer(300), @Integer(400)]) => (),
                 _ => fail!()
             }});
     }
@@ -361,7 +361,7 @@ mod tests {
     fn deserialize_binary_test() {
         test_parse([109,0,0,0,3,1,2,3], |i| {
             match i {
-                @Binary([1,2,3]) => (),
+                &Binary([1,2,3]) => (),
                 _ => fail!()
             }});
     }
@@ -370,12 +370,12 @@ mod tests {
     fn deserialize_biginteger_test() {
         test_parse([110,4,0,0,94,208,178], |i| {
             match i {
-                @BigInteger(0, [0,94,208,178]) => (),
+                &BigInteger(0, [0,94,208,178]) => (),
                 _ => fail!()
             }});
         test_parse([110,4,1,0,94,208,178], |i| {
             match i {
-                @BigInteger(1, [0,94,208,178]) => (),
+                &BigInteger(1, [0,94,208,178]) => (),
                 _ => fail!()
             }});
     }
@@ -387,7 +387,7 @@ mod tests {
                     0,0,0,0,0,0,0], 
             |i| {
             match i {
-                @Reference(@Atom(string), [188,0,0], 0) => assert_eq!(string, @"nonode@nohost"),
+                &Reference(@Atom(string), [188,0,0], 0) => assert_eq!(string, @"nonode@nohost"),
                 _ => fail!()
             }});
     }
@@ -397,7 +397,7 @@ mod tests {
         test_parse([131,100,0,2,111,107], 
             |i| {
             match i {
-                @Atom(string) => assert_eq!(string, @"ok"),
+                &Atom(string) => assert_eq!(string, @"ok"),
                 _ => fail!()
             }});
     }
