@@ -9,11 +9,12 @@ use std::at_vec;
 use std::str::from_chars;
 use std::f64::from_str;
 
+
 pub enum ErlangTerm {
-    Atom(@str),
     AtomCacheRef(u8),
     Integer(i32),
     Float(f64),
+    Atom(@str),
     Reference(@ErlangTerm, @[u32], u8),
     Port(@ErlangTerm, u32, u8),
     Pid(@ErlangTerm, u32, u32, u8),
@@ -231,12 +232,7 @@ impl Decoder {
     priv fn parse_newfloat(&self) -> @ErlangTerm {
         let f = self.reader.read_be_f64();
         @Float(f)
-    }
-
-    priv fn parse_distribution_header(&self) -> @[@ErlangTerm] {
-        @[]
-    }
-    
+    }    
 }
 
 impl Encoder {
@@ -247,10 +243,119 @@ impl Encoder {
     }
 
     fn encode(&self, term: &ErlangTerm) {
-
+        match term {
+            &AtomCacheRef(i) => self.encode_atom_cache_ref(i),
+            &Integer(i)      => self.encode_integer(i),
+            &Float(f)        => self.encode_float(f),
+            &Atom(s)         => self.encode_atom(s),
+            &Tuple(a)        => self.encode_tuple(a),
+            &String(s)       => self.encode_string(s),
+            &List(a)         => self.encode_list(a),
+            &Binary(b)       => self.encode_binary(b),
+            &BigInteger(s,d) => self.encode_biginteger(s,d),
+            &BitBinary(u,b)  => self.encode_bitbinary(u,b),
+            _ => fail!("Unknown term")
+        }
     }
 
+    priv fn encode_atom_cache_ref(&self, i:u8) {
+        self.writer.write_u8(82);
+        self.writer.write_u8(i);
+    }
 
+    priv fn encode_integer(&self, i:i32) {
+        if i >= 0 && i <= 255 {
+            self.writer.write_u8(97);
+            self.writer.write_u8(i as u8);
+        } else {
+            self.writer.write_u8(98);
+            self.writer.write_be_i32(i);
+        }
+    }
+
+    priv fn encode_float(&self, f:f64) {
+        self.writer.write_u8(70);
+        self.writer.write_be_f64(f);
+    }
+
+    priv fn encode_atom(&self, s:&str) {
+        let l = s.char_len();
+        if l <= std::u8::max_value as uint {
+            self.writer.write_u8(115);
+            self.writer.write_u8(l as u8);
+        } else 
+        if l <= std::u16::max_value as uint {
+            self.writer.write_u8(100);
+            self.writer.write_be_u16(l as u16);
+        } else { 
+            fail!("Atom too long")
+        }
+        self.writer.write_str(s);
+    }
+
+    priv fn encode_tuple(&self, a:&[@ErlangTerm]) {
+        let l = a.len();
+        if l <= std::u8::max_value as uint {
+            self.writer.write_u8(104);
+            self.writer.write_u8(l as u8);
+        } else 
+        if l <= std::u32::max_value as uint {
+            self.writer.write_u8(105);
+            self.writer.write_be_u32(l as u32);
+        } else { 
+            fail!("Tuple too long")
+        }
+        for a.iter().advance |&x| { self.encode(x) };
+    }
+
+    priv fn encode_string(&self, s:&str) {
+        let l = s.char_len();
+        if l > std::u16::max_value as uint {
+            fail!("String too long")
+        }
+        self.writer.write_u8(107);
+        self.writer.write_be_u16(l as u16);
+        self.writer.write_str(s);
+    }
+
+    priv fn encode_list(&self, a:&[@ErlangTerm]) {
+        let l = a.len() as u32;
+        self.writer.write_u8(108);
+        self.writer.write_be_u32(l);
+        for a.iter().advance |&x| { self.encode(x) };
+        self.writer.write_u8(106); // Don't forget list tail
+    }
+
+    priv fn encode_binary(&self, b:&[u8]) {
+        let l = b.len() as u32;
+        self.writer.write_u8(109);
+        self.writer.write_be_u32(l);
+        self.writer.write(b);
+    }
+
+    priv fn encode_biginteger(&self, s:u8, d:&[u8]) {
+        let l = d.len();
+        if l <= std::u8::max_value as uint {
+            self.writer.write_u8(110);
+            self.writer.write_u8(l as u8);
+        } else 
+        if l <= std::u32::max_value as uint {
+            self.writer.write_u8(111);
+            self.writer.write_be_u32(l as u32);
+        } else { 
+            fail!("BigInteger too long")
+        }
+        self.writer.write_u8(s);
+        self.writer.write(d);
+    }
+
+    priv fn encode_bitbinary(&self, u:u8, b:&[u8]) {
+        let l = b.len() as u32;
+        self.writer.write_u8(77);
+        self.writer.write_be_u32(l);
+        self.writer.write_u8(u);
+        self.writer.write(b);
+    }
 }
 
 // ---------------------
