@@ -246,6 +246,10 @@ impl Encoder {
         }
     }
 
+    fn encode(&self, term: &ErlangTerm) {
+        
+    }
+
 
 }
 
@@ -257,7 +261,7 @@ mod tests {
     use super::*;
     use std::io;
 
-    fn test_parse(bytes: &[u8], f: &fn(@ErlangTerm)) {
+    fn test_parse(bytes: &[u8], f: &fn(&ErlangTerm)) {
         io::with_bytes_reader(bytes, |rd| {
             let decoder = Decoder::new(rd);
             f(decoder.decode())
